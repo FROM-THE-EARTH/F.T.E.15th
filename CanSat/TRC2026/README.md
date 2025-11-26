@@ -24,19 +24,22 @@
 
 ### 2.1 OS イメージの準備
 
-1. Raspberry Pi Imager をインストールする。
+1. Raspberry Pi Imager をインストールする（https://www.raspberrypi.com/software/）。
 2. 起動後、
+  * Device → *Raspberry PI Zero 2 W* 
+  * OS → *Raspberry Pi OS(other)*から*Raspberry Pi OS Lite（64-bit）* を選択（GUIは要らない）
+  * Storage → 該当するMicroSDカードを選択
 
-   * OS → *Raspberry Pi OS Lite（64-bit）* を選択（GUIは要らない）
+3. 以下を設定・有効化する
 
-3. 「設定（歯車アイコン）」を開き、次を有効化（重要）
+   * Hostname
+   * Localisation（国・キーボード設定）
+   * User
+   * Wi-Fi
+   * Remote access（SSHの有効化、パスワード認証で十分）
+   * Raspberry Pi Connect（オフでよい）
 
-   * ホスト名の設定
-   * SSH の有効化
-   * Wi-Fi SSID とパスワードの設定
-   * ロケール（国・キーボード）設定
-
-4. 書き込みを実行
+4. Writing（書き込み）を実行
 
 ---
 
@@ -53,6 +56,11 @@
 
 * 同一ネットワークにいるか
 * `.local` 解決ができない環境では、ラズパイの IPアドレス を確認して、ホスト名のところを IP に置き換えて接続する（WindowsやAndroid端末では、mDNS（.local）が安定的にサポートされておらず、ホスト名接続は一般に不安定）
+* Permission denied (publickey,password).が出る場合
+以下で接続を実行（その場しのぎ）
+```bash
+ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no <ユーザー名>@<IPアドレス>
+```
 
 ---
 
@@ -80,9 +88,8 @@ source venv/bin/activate
 
 ```bash
 sudo apt update
-sudo apt install -y python3-smbus i2c-tools python3-pigpio pigpio python3-rpi.gpio python3-venv python3-pip git python3-gpiozero python3 numpy opencv-python==4.6.0.66 python3-pandas pyserial screen
-sudo systemctl enable pigpiod
-sudo systemctl start pigpiod
+sudo apt install -y python3-smbus i2c-tools python3-gpiozero python3-rpi-lgpio python3-rpi.gpio python3-venv python3-pip git python3-gpiozero python3  python3-pandas screen #ラズパイの新しいOSでは、pigpioのサポートが切れたので、gpiozeroで代替する
+pip install -y numpy opencv-python==4.6.0.66 pyserial #sudoは付けない
 ```
 
 ---
@@ -165,7 +172,7 @@ python3 main.py
 ```
 * GPSのテスト（気圧、9軸はライブラリコードを実行すればテスト可能）
 ```bash
-sudo screen /dev/ttyAMA0 9600 #ボーレートが違う場合、115200も試す
+sudo screen /dev/ttyAMA0 115200 #ボーレートが違う場合、9600も試す
 ```
 * カメラのテスト
 ```bash
@@ -176,20 +183,14 @@ rpicam-hello -t 0　#bookwormの場合
 
 ## 8. トラブルシューティング
 
-### 8.1 SSH 接続不可
-
-* OS 書き込み時に「SSH 有効化」を忘れている → 再度 Imager で設定
-* Wi-Fi 設定誤り → SSID / パスワードを再確認
-* ホスト名接続が不可な場合は、IPアドレスから接続する
-
-### 8.2 センサが認識されない
+### 8.1 センサが認識されない
 
 * `i2cdetect -y 1` で確認
 * 配線の導通を確認
 
 ---
 
-## 10. その他
+## 9. その他
 
 ### Raspberry Pi Zero 2 W で IP アドレスを固定する手順
 
@@ -223,7 +224,7 @@ static domain_name_servers=192.168.1.1 8.8.8.8
 
 * static ip_address: 割り当てたい固定 IP とサブネット
 * static routers: デフォルトゲートウェイ（通常はルーターのアドレス）
-* static domain_name_servers: DNS サーバー
+* static domain_name_servers: DNS サーバー（static routersに入力したものと同じでよい）
 
 #### 4. 再起動と確認
 
@@ -244,7 +245,7 @@ ip a
 * 左下の「><」アイコン（リモート接続）からRemote-SSH: Connect to Host… を選択
 * 以下を入力
 ```
-ssh ユーザー名"@192.168.xx.xx（Raspberry Pi のIP）
+ssh <ユーザー名>@<Raspberry Pi のIPアドレス>
 ```
 * 接続後、VS Code 下部のステータスバーが「SSH: Raspberry Pi」表示になる
 * Terminal → New Terminal を開くと、Pi のターミナルが利用可能
