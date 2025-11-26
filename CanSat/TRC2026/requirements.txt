@@ -1,7 +1,0 @@
-numpy
-pandas
-smbus2
-pyserial
-RPi.GPIO
-pigpio
-gpiozero
