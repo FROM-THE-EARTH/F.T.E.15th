@@ -12,17 +12,17 @@
 │   ├── __init__.py
 ├── tests/
 │   ├── motor_test.py
-│   ├── LED.py
+│   ├── led.py
 │   ├── gps_test.py
-├── requirements.txt
+│   ├── landing_impact.py
+│   ├── open_parachute.py
 └── README.md
 ```
 - 本番用コード：main.py
 - センサー用ライブラリ：bno055.py, bmp180.py, mycropyGPS.py
-- テストコード：motor_test.py, LED.py, gps_test.py
+- テストコード：motor_test.py, led.py, gps_test.py, landing_impact.py（着地衝撃試験用）, open_parachute.py（パラシュート投下試験用）
 - カメラフェーズ用：detect_corn.py
 - ゴール画像撮影用：capture_roi_image.py
-- pip でインストールするパッケージ一覧：requirements.txt
 
 ## 搭載計器一覧
 |分類|型番|購入先|備考|
@@ -54,9 +54,9 @@
 ### ソフトウェア
 
 * Raspberry Pi Imager
-* SSH クライアント（Windows なら標準 PowerShell）
 * VSCode
 * Git
+* ターミナル
 
 ---
 
@@ -135,17 +135,66 @@ sudo reboot
 ### 3.1 Python 仮想環境の作成
 
 ```bash
-sudo apt install -y python3-pip python3.10 python3.10-venv
-python3.10 -m venv venv
-source venv/bin/activate
+# sudo apt install -y python3-pip python3.10 python3.10-venv
+# python3.10（opencv-python==4.6.0.66 が入るバージョン（最新版のPythonは当該バージョンをサポートしてない）；opencv-python==4.6.0.66 なのは、動作保証が取れているからで、最新版だとバグりがち（最新版のPythonをサポートしてないこともある））がはじかれた場合は以下を実行
+# sudo apt install -y git build-essential libssl-dev zlib1g-dev \ libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \ libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+# pyenv をインストール
+# curl https://pyenv.run | bash
+# 確認
+# ls ~/.pyenv
+# .bashrc を編集
+# nano ~/.bashrc
+# ~/.bashrc に以下を追記（自動で追記されている場合あり）
+# export PATH="$HOME/.pyenv/bin:$PATH"
+# eval "$(pyenv init -)"
+# eval "$(pyenv virtualenv-init -)"
+# 読み込み
+# source ~/.bashrc
+# 再度確認
+# pyenv --version
+# Python 3.10 をインストール
+# pyenv install 3.10.13
+# pyenv global 3.10.13
+# 確認
+# python3 --version
+# 仮想環境作成
+# python3 -m venv --system-site-packages venv
+# source venv/bin/activate 
 ```
 
 ### 3.2 依存パッケージのインストール
 
 ```bash
 sudo apt update
-sudo apt install -y python3-smbus i2c-tools python3-gpiozero python3-rpi-lgpio python3-venv python3-pip git python3-gpiozero python3 screen libgl1
-pip install smbus2 "numpy>=1.23,<1.25" opencv-python==4.6.0.66 pyserial # pip install requirements.txt でもよい
+sudo apt install -y python3-smbus i2c-tools python3-gpiozero python3-rpi-lgpio git python3 screen libgl1 
+
+# pynmea2
+sudo apt install -y python3-pip
+python3 -m pip install --upgrade pip
+python3 -m pip install pynmea2
+
+sudo apt install swig python3-dev python3-setuptools build-essential
+sudo apt install liblgpio1 liblgpio-de
+
+sudo apt install -y python3-picamera2 python3-libcamera libcamera-apps
+
+sudo apt install python3-opencv python3-numpy python3-smbus python3-serial
+
+sudo apt install python3-opencv
+
+# pip install smbus2 "numpy>=1.23,<1.25" opencv-python==4.6.0.66 pyserial # pip install requirements.txt でもよい
+# pip install gpiozero 
+# pip install lgpio
+# pip install --no-cache-dir lgpio
+```
+```bash
+sudo apt update
+sudo apt install -y python3-smbus i2c-tools python3-gpiozero python3-rpi-lgpio git python3 screen libgl1
+sudo apt install swig python3-dev python3-setuptools build-essential
+sudo apt install liblgpio1 liblgpio-de
+sudo apt install -y python3-picamera2 python3-libcamera libcamera-apps
+sudo apt install python3-numpy python3-smbus python3-serial
+sudo apt install python3-opencv
 ```
 
 ---
@@ -163,8 +212,6 @@ sudo raspi-config
 * Interface Options → I2C
 
 * Interface Options → Serial
-
-* Interface Options → SPI（必要に応じて）
 
 * Performance → GPU Memory（必要に応じて）
 
@@ -188,11 +235,11 @@ cd TRC2026
 ## 6. 実行方法
 * メインコード
 ```bash
-source venv/bin/activate
+source venv/bin/activate # 仮想環境を作らなくても、環境構築ができたら、実行しなくてよい
 python3 main.py
 ```
 
-* GPSのテスト（生データ取得；テストコードのほうが見やすい）
+* GPSからの生データ取得（テストコードのほうが見やすいが一応）
 ```bash
 sudo screen /dev/ttyAMA0 115200 # ボーレートが違う場合、9600も試す
 ```
@@ -341,8 +388,6 @@ git pull origin main
 # ローカルの変更を残しつつ、GitHub の更新を取り込むコマンド（rebase.ver）
 git pull --rebase origin main
 ```
-
-
 
 
 
