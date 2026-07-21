@@ -49,12 +49,12 @@ Wire.setClock(50000);
   Serial.println("BNO055 initialized.");
 
   // 4. SAM-M8Q (GPS) 初期化
-  if (!myGNSS.begin()) {
-    Serial.println("Error: SAM-M8Q not detected!");
-    while (1) { delay(10); }
-  }
-  myGNSS.setI2COutput(COM_TYPE_UBX);
-  Serial.println("SAM-M8Q initialized.");
+  //if (!myGNSS.begin()) {
+  //  Serial.println("Error: SAM-M8Q not detected!");
+  //  while (1) { delay(10); }
+  //}
+  //myGNSS.setI2COutput(COM_TYPE_UBX);
+  //Serial.println("SAM-M8Q initialized.");
 
   // 5. SDカード 初期化
   if (!SD.begin(SD_CS)) {
@@ -76,18 +76,18 @@ void loop() {
     float accZ = accelerometerData.acceleration.z;
 
     if (accX == 0.0 && accY == 0.0 && accZ == 0.0) {
-      Serial.println("Warning: BNO055 returned all zeros. Re-initializing...");
+      //Serial.println("Warning: BNO055 returned all zeros. Re-initializing...");
       initBNO();
       return;  // 今回のループはスキップして次回再取得する
     }
     // --- [2] SAM-M8QからGPS座標取得 (十進法) ---
-    float latitude = myGNSS.getLatitude() / 10000000.0;
-    float longitude = myGNSS.getLongitude() / 10000000.0;
+    //float latitude = myGNSS.getLatitude() / 10000000.0;
+    //float longitude = myGNSS.getLongitude() / 10000000.0;
 
     // --- [3] データ文字列のフォーマット ---
     elapsedTime = millis();
-    String dataString = String(elapsedTime) + "Lat:" + String(latitude, 6) + ", Lon:" + String(longitude, 6)+
-                        ", aX:" + String(accX, 2) + ", aY:" + String(accY, 2) + ", aZ:" + String(accZ, 2);
+    String dataString = String(elapsedTime) +
+                        "," + String(accX, 2) + ", " + String(accY, 2) + ", " + String(accZ, 2);
     // --- [4] PCのシリアルモニタへ出力 (デバッグ確認用) ---
     Serial.println(dataString);
 
