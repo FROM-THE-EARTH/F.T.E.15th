@@ -42,6 +42,8 @@ SemaphoreHandle_t dataMutex; // GPSデータの読み書き衝突を防ぐため
 double global_latitude = 0.0;
 double global_longitude = 0.0;
 // BNO055の加速度レンジを16Gに強制変更する関数
+
+int phase = 0;
 void setBNO055Range16G() {
   Wire.beginTransmission(BNO055_I2C_ADDR);
   Wire.write(0x3D); // OPR_MODE
@@ -169,31 +171,39 @@ void setup() {
 
 void loop() {
   // --- UARTでコントローラーからの最新データを取得 ---
-while (SerialUART.available() > 0) {
-    String temp = SerialUART.readStringUntil('\n');
-    temp.trim();
-  
-if (temp.length() > 0 && temp.indexOf(',') != -1) {
-      
-      // さらに厳密に、文字化け（数字、カンマ、ドット、マイナス以外のゴミ文字）がないかチェック
-      bool isValid = true;
-      for (int i = 0; i < temp.length(); i++) {
-        char c = temp.charAt(i);
-        if (!isdigit(c) && c != '.' && c != ',' && c != '-' && c != '\r' && c != '\n') {
-          isValid = false; // 不正な文字（文字化け）が含まれている
-          break;
+if(phase!=3){
+  while (SerialUART.available() > 0) {
+      String temp = SerialUART.readStringUntil('\n');
+      temp.trim();
+    
+  if (temp.length() > 0 && temp.indexOf(',') != -1) {
+        
+        // さらに厳密に、文字化け（数字、カンマ、ドット、マイナス以外のゴミ文字）がないかチェック
+        bool isValid = true;
+        for (int i = 0; i < temp.length(); i++) {
+          char c = temp.charAt(i);
+          if (!isdigit(c) && c != '.' && c != ',' && c != '-' && c != '\r' && c != '\n') {
+            isValid = false; // 不正な文字（文字化け）が含まれている
+            break;
+          }
         }
-      }
-      
-      // 正常なデータであれば変数を更新し、受信時刻を記録
-      if (isValid) {
-        remoteData = temp;
-      }else{
-        remoteData = "0,0";
+        
+        // 正常なデータであれば変数を更新し、受信時刻を記録
+        if (isValid) {
+          remoteData = temp;
+        }else{
+          remoteData = "0,0";
+        }
+        int commaIndex = remoteData.indexOf(',');
+        // カンマが見つかった場合
+        if (commaIndex != -1) {
+        // カンマの次の文字から最後までを切り出し、int型に変換する
+        phase = remoteData.substring(commaIndex + 1).toInt();
+        }
       }
     }
   }
-
+  
   double latitude, longitude;
   xSemaphoreTake(dataMutex, portMAX_DELAY);
   latitude = global_latitude;
@@ -206,9 +216,7 @@ if (temp.length() > 0 && temp.indexOf(',') != -1) {
   xSemaphoreGive(i2cMutex);
 
   Time=millis();
-  
-  latitude=38.2612233;
-  longitude=140.8485612;
+
   // --- データの合体 (文字列化) ---
   String dataString = String(Time)+","+
                       String(latitude, 7) + "," + 

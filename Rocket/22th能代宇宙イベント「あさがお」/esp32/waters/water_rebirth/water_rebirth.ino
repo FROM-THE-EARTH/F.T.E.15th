@@ -33,7 +33,6 @@ int mode = 0;
 Servo myservo;
 int pos = 180;
 
-
 Adafruit_BMP085 bmp;
 
 float current_alt = 0;
@@ -41,7 +40,6 @@ float maxalt = -100;
 float dalt = 0;
 float prealt = 0;
 
-int buzzar = 33;
 float calcMedian(void *array, int n, int type) {
   if (type == 0) {  // If data type is int
 
@@ -155,8 +153,6 @@ void setup() {
   SerialUART.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);  // データロガーとのUART通信用
 
   pinMode(13, INPUT);
-  pinMode(buzzar,OUTPUT);
-  digitalWrite(buzzar,LOW);
 
   ESP32PWM::allocateTimer(0);
   ESP32PWM::allocateTimer(1);
@@ -201,9 +197,7 @@ void loop() {
 
   fpstate = fp();
   Fpstate = isLaunched(fpstate);
-  if (Fpstate == 1) {
-    mode = 0;
-  }
+
 
   switch (mode) {
     case 0:
@@ -213,11 +207,13 @@ void loop() {
         mode = 1;
         //Serial.println("Launched! Mode 1");
       }
-      digitalWrite(buzzar,LOW);
       break;
 
     case 1:
-      digitalWrite(buzzar,HIGH);
+      if (Fpstate == 1) {
+        mode = 0;
+        break;
+      }
       nowtime = millis();
       Time = nowtime - starttime;
 
@@ -237,7 +233,7 @@ void loop() {
       Time = nowtime - starttime;
       //Time = 0;
       //count = 0;
-      if ((count == 10) || (Time > 15000)) {
+      if ((count == 10) || (Time > 10000)) {
         //Serial.println("OPEN");
         myservo.attach(19);
         myservo.write(0);
