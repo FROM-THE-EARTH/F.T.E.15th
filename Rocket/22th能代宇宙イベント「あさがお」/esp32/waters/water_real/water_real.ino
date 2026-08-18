@@ -174,7 +174,7 @@ void setup() {
 
 void calc_d_alt() {
   current_alt = bmp.readAltitude();
-  if (current_alt > 1000) {
+  if ((abs(current_alt) > 1000) || (!bmp.begin())){
     current_alt = prealt;
   }
   prealt = current_alt;
@@ -228,7 +228,7 @@ void loop() {
       break;
 
     case 2:
-      if (dalt > 1.7) {
+      if (dalt > 10) {
         count++;
       } else {
         count = 0;
@@ -237,7 +237,7 @@ void loop() {
       Time = nowtime - starttime;
       //Time = 0;
       //count = 0;
-      if ((count == 10) || (Time > 15000)) {
+      if ((count == 10) || (Time > 22241)) {
         //Serial.println("OPEN");
         myservo.attach(19);
         myservo.write(0);
@@ -248,5 +248,5 @@ void loop() {
       break;
   }
 
-  delay(100);
+  delay(10);
 }

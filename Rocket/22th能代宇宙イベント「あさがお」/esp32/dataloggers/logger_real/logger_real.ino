@@ -253,5 +253,5 @@ if(phase!=3){
     lastLoRaSend = Time; // 送信時刻を更新
   }
 
-  delay(100); 
+  delay(10); 
 }
